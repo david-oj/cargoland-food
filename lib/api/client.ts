@@ -39,13 +39,13 @@ apiClient.interceptors.response.use(
     const data = error?.response?.data as
       | { statusCode?: number; code?: string; message?: string }
       | undefined;
-
-    const normalized = new Error(
-      data?.message || error.message || "Something went wrong"
-    ) as Error & { statusCode?: number; code?: string;};
-    normalized.statusCode = data?.statusCode ?? error.response?.status;
-    normalized.code = data?.code;
-    normalized.cause = error; // keep original │                                                                               │
+    // Normalize Error Shape to Match Backend Standard
+    const normalized = {
+      message: data?.message || error.message || "Something went wrong",
+      statusCode: data?.statusCode ?? error.response?.status,
+      code: data?.code,
+      cause: error, // keep original error for debugging
+    };
 
     if (status === 401 && !originalRequest._retry) {
       const refreshToken =
@@ -66,7 +66,7 @@ apiClient.interceptors.response.use(
             .post(API_ROUTES.auth.refresh, { refreshToken })
             .then((res) => {
               // Expecting { token: { accessToken, refreshToken } }
-              const tokens = res?.data?.token;
+              const tokens = res?.data;
               const newAccess = tokens?.accessToken;
               const newRefresh = tokens?.refreshToken;
               if (newAccess) localStorage.setItem("auth_token", newAccess);
@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
           ).Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         }
-      } catch{
+      } catch {
         // Refresh failed; clear tokens
         if (typeof window !== "undefined") {
           localStorage.removeItem("auth_token");

@@ -25,6 +25,7 @@ import { useResendOtp, useVerifyOtp } from "@/lib/hooks/mutations/useAuth";
 import { useSession } from "@/lib/hooks/useSession";
 import { RiLoader2Line } from "react-icons/ri";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   otp: z.string().min(4, "OTP must be at least 4 digits"),
@@ -63,13 +64,13 @@ const OTPModal = () => {
 
     if (otpType === "signup") {
       // After successful signup OTP, go to sign in
-      return goToStep("signin");
+      goToStep("signin");
     } else if (otpType === "forgot-password") {
       // After forgot password OTP, go to reset password
-      return goToStep("reset-password");
+      goToStep("reset-password");
     } else {
       // After sign in OTP, close modal (user is now authenticated)
-      return closeAuth();
+      closeAuth();
     }
   };
 
@@ -81,6 +82,7 @@ const OTPModal = () => {
   }, [timer]);
 
   const handleOTPVerify = (data: VerifyOtp) => {
+    setOtpMessage({ message: "", error: false });
     verifyOtp(data, {
       onSuccess: (res) => {
         // Persist tokens on OTP verification success
@@ -90,13 +92,14 @@ const OTPModal = () => {
           if (access) localStorage.setItem("auth_token", access);
           if (refresh) localStorage.setItem("refresh_token", refresh);
         }
-        console.log(`OTP verified for: ${data.phoneNumber}`);
+        toast.success(res.message);
+
         // Promote pending user to authenticated user
         completeOtp();
         routeModal(user?.addressess);
       },
       onError: (error) => {
-        setOtpMessage({ error: true, message: error.message });
+        toast.error(error.message);
       },
     });
   };
@@ -150,7 +153,7 @@ const OTPModal = () => {
 
   return (
     <ModalTransition>
-      <DialogHeader className="items-center">
+      <DialogHeader className="items-center gap-0">
         <div className="size-[50px] bg-black flex justify-center items-center rounded-lg">
           <img
             src={logo.src}
@@ -158,8 +161,10 @@ const OTPModal = () => {
             className="h-[33.4px] w-7 object-cover"
           />
         </div>
-        <DialogTitle className="form-title">Verify your number</DialogTitle>
-        <DialogDescription className="form-description text-center">
+        <DialogTitle className="form-title mt-4">
+          Verify your number
+        </DialogTitle>
+        <DialogDescription className="form-description text-center mt-0.5 sm:mt-2">
           We’ve sent a 4-digit code to {formData.phone} <br /> via{" "}
           <span className="text-primary">SMS</span>
         </DialogDescription>
@@ -190,7 +195,7 @@ const OTPModal = () => {
                     className="text-center"
                   />
                 )}
-                <FieldDescription className="text-sm text-center">
+                <FieldDescription className="text-sm text-center mt-0! ">
                   Click{" "}
                   <span
                     onClick={handleResend}
@@ -212,8 +217,12 @@ const OTPModal = () => {
           />
         </FieldGroup>
         <Button
-          disabled={otpData.length !== 4}
-          className="disabled:bg-gray-100 disabled:text-gray-300 mt-8 md:py-3.5 submit-btn"
+          disabled={otpData.length !== 4 || isPending}
+          className={` mt-8 md:py-3.5 submit-btn ${
+            isPending
+              ? "bg-primary"
+              : "disabled:bg-gray-100 disabled:text-gray-300"
+          }`}
         >
           {isPending || resendPending ? (
             <RiLoader2Line className="size-5 animate-spin" />

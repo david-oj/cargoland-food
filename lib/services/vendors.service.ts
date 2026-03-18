@@ -1,0 +1,170 @@
+import apiClient from "../api/client";
+import { API_ROUTES } from "../api/endpoints";
+import { APIResponse } from "../types/cart.types";
+
+export interface Vendor {
+  id: string;
+  businessName: string;
+  businessCategory: string | null;
+  businessAddress: string | null;
+  preparationTime?: string | null;
+  workingHours?: [
+    {
+      preparationTime: string;
+    }
+  ];
+  isPreorder: boolean | null;
+  isFavourite: boolean;
+  golive: boolean | null;
+  totalOrders: number | null;
+  profileImg: string;
+  createdAt: string;
+  ratings: number;
+}
+
+export interface Vendors {
+  status: string;
+  message: string;
+  vendors: Vendor[];
+  totalVendors: number | null;
+  currentPage: number | null;
+  totalPages: number | null;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+interface Addon {
+  id: string;
+  name: string;
+  addonImage: string;
+  price: string;
+  menuId: string;
+  createdAt: string;
+  upddatedAt: string;
+}
+
+interface Size {
+  id: string;
+  name: string;
+  size: string;
+  price: string;
+  menuId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Menu {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  uploadImageUrl: string;
+  imageUrl: string;
+  categoryId: string;
+  vendorId: string;
+  outOfStock?: boolean;
+  addons?: Addon[];
+  sizes?: Size[];
+  isMenuSet: boolean;
+  PromotionItem?: {
+    id: string;
+    promotionId: string;
+    menuItemId: string;
+    promotion: {
+      percentageValue: number;
+    };
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  vendorId: string;
+  userId: string;
+  createdAt: string;
+}
+
+interface Promotions {
+  id: string;
+  isDiscount: boolean;
+  discountType: string;
+  percentageValue: number;
+  applyType: string;
+  startDate: string;
+  endDate: string;
+  vendorId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Categories {
+  id: string;
+  name: string;
+  publishNow: boolean;
+  vendorId: string;
+  createdAt: string;
+}
+
+export interface VendorDetail extends Omit<Vendor, "ratings"> {
+  categories: Categories[];
+  menus: Menu[];
+  review: Review[];
+  promotions: Promotions[];
+}
+
+export interface vendorById {
+  status: string;
+  message: string;
+  data: VendorDetail;
+  averageRating: {
+    simpleRating: number;
+    bayesianRating: number;
+  };
+}
+
+export interface DiscountVendor {
+  vendor: Vendor
+  aggregateDiscount: number;
+}
+
+export type DiscountVendorsRes = APIResponse<DiscountVendor[]>;
+
+export const vendors = {
+  async getAllVendors(zoneId: string, page: number = 1, limit: number) {
+    const res = await apiClient.get<Vendors>(
+      `${API_ROUTES.vendor.allVendors(zoneId)}?page=${page}&limit=${limit}`
+    );
+    return res.data;
+  },
+
+  async getVendorsByCategory(
+    zoneId: string,
+    query: string,
+    page: number = 1,
+    limit: number
+  ) {
+    const res = await apiClient.get(
+      `${API_ROUTES.vendor.getVendorsByCategory(
+        zoneId
+      )}?query=${query}&page=${page}&limit=${limit}`
+    );
+    return res.data;
+  },
+
+  async getDiscountVendors(zoneId: string) {
+    const res = await apiClient.get<DiscountVendorsRes>(
+      API_ROUTES.vendor.getDiscountVendors(zoneId)
+    );
+    return res.data;
+  },
+
+  async getVendorMenuById(id: string) {
+    const res = await apiClient.get<vendorById>(
+      API_ROUTES.vendor.vendorMenuById(id)
+    );
+    return res.data;
+  },
+};

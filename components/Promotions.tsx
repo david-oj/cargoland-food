@@ -1,6 +1,6 @@
 "use client";
 
-import VendorCard from "./VendorCard";
+import VendorCard from "./vendor/VendorCard";
 import { Button } from "./ui/button";
 import { RiArrowLeftLine, RiArrowRightLine } from "react-icons/ri";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -10,42 +10,44 @@ import type { Swiper as SwiperType } from "swiper";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
-import { usePromotions } from "@/lib/hooks/queries/usePromotions";
 
 import Loading from "./LoadingSkeleton";
+import { useDiscountVendors } from "@/lib/hooks/queries/useVendors";
+import { useActiveZone } from "@/lib/hooks/useActiveZone";
 
 const Promotions = () => {
+  const { zoneId } = useActiveZone();
+  const { data, isLoading, isSuccess } = useDiscountVendors(zoneId ?? "");
+
   // Simple Swiper refs for both sections
   const discountsSwiperRef = useRef<SwiperType>(null);
-  const featureSwiperRef = useRef<SwiperType>(null);
+  // const featureSwiperRef = useRef<SwiperType>(null);
 
   // Simple navigation functions for Discounts
   const goToPreviousDiscounts = () => discountsSwiperRef.current?.slidePrev();
   const goToNextDiscounts = () => discountsSwiperRef.current?.slideNext();
 
   // Simple navigation functions for Feature
-  const goToPreviousFeature = () => featureSwiperRef.current?.slidePrev();
-  const goToNextFeature = () => featureSwiperRef.current?.slideNext();
-
-  const { data, isLoading } = usePromotions();
-
+  // const goToPreviousFeature = () => featureSwiperRef.current?.slidePrev();
+  // const goToNextFeature = () => featureSwiperRef.current?.slideNext();
   if (isLoading) {
     return (
       <div>
         <div className="mt-6 sm:my-10">
           <Loading count={3} title scroll />
         </div>
-        <div className="my-4 sm:my-10">
+        {/* <div className="my-4 sm:my-10">
           <Loading count={3} title scroll />
-        </div>
+        </div> */}
       </div>
     );
   }
 
   return (
     <div>
-      {!isLoading && data?.discount.length && (
+      {isSuccess && data.length && (
         <>
+          {/* Discounts Section */}
           <section className="mt-6 sm:my-10">
             <div className="flex justify-between">
               <h3>Discounts</h3>
@@ -75,7 +77,7 @@ const Promotions = () => {
                 modules={[Navigation]}
                 spaceBetween={16}
                 slidesPerView={1.3}
-                loop={true}
+                loop={data.length > 3}
                 speed={600}
                 breakpoints={{
                   640: {
@@ -86,18 +88,23 @@ const Promotions = () => {
                     spaceBetween: 24,
                   },
                 }}
-                // className="!overflow-visible"
               >
-                {data?.discount.map((discount) => (
-                  <SwiperSlide key={discount.id}>
-                    <VendorCard menuItem={discount} />
+                {data?.map((discount) => (
+                  <SwiperSlide key={discount.vendor.id}>
+                    <VendorCard
+                      vendorId={discount.vendor.id}
+                      vendor={discount.vendor}
+                      aggregateDiscount={discount.aggregateDiscount}
+                      source="homepage"
+                    />
                   </SwiperSlide>
                 ))}
               </Swiper>
             </div>
           </section>
 
-          <section className="my-4 sm:my-10">
+          {/* Featured Section */}
+          {/* <section className="my-4 sm:my-10">
             <div className="flex justify-between">
               <h3>Featured</h3>
               <div className="flex gap-4 max-sm:hidden">
@@ -147,7 +154,7 @@ const Promotions = () => {
                 ))}
               </Swiper>
             </div>
-          </section>
+          </section> */}
         </>
       )}
     </div>

@@ -44,3 +44,7 @@ design-tokens.css
 AGENTS.md
 README_DESIGN_SYSTEM.md
 .github
+Users/ACE/Users/ACE/.local/share/extended-memory-mcp/memory.db
+CURRENCY_IMPLEMENTATION_GUIDE.md
+lib/hooks/useCurrency.ts
+lib/utils/currency.ts
