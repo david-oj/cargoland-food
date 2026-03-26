@@ -42,8 +42,8 @@ export type OrderSuccessPayload = {
 
 export type AddressesPayload = {
   source: "general" | "checkout";
-  vendorId: string;
-  deliveryType: DeliveryType;
+  vendorId?: string;
+  deliveryType?: DeliveryType;
 } | null;
 
 // export type OrderSuccesPayload = {
