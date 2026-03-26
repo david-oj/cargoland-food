@@ -2,15 +2,45 @@ import { memo } from "react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { useUpdateCheckout } from "@/lib/hooks/mutations/useUpdateCheckout";
+import { DeliveryType } from "@/lib/services/cart.service";
+import { toast } from "sonner";
+import { RiLoader2Line } from "react-icons/ri";
 
 interface RiderNoteProps {
   open: boolean;
+  vendorId: string;
+  deliveryType: DeliveryType;
   onOpenChange: (close: boolean) => void;
 }
 
-const RiderNoteModal = ({ open, onOpenChange }: RiderNoteProps) => {
+const RiderNoteModal = ({
+  open,
+  onOpenChange,
+  vendorId,
+  deliveryType,
+}: RiderNoteProps) => {
+  const { mutate, isPending } = useUpdateCheckout();
   const [msg, setMsg] = useState("");
   const maxLength = 200;
+
+  const handleMessage = () => {
+    if (!msg.trim()) {
+      toast.error("Please enter your delivery instructions.");
+      return;
+    }
+    if (!vendorId) return;
+
+    mutate(
+      { vendorId, payload: { deliveryType, noteToRider: msg } },
+      {
+        onError: (error) => {
+          toast.error(error.message || "Failed to send note");
+        },
+      }
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="dialog pt-6! pb-5! sm:pt-[74px]! px-4! sm:px-7!">
@@ -33,7 +63,13 @@ const RiderNoteModal = ({ open, onOpenChange }: RiderNoteProps) => {
             {msg.length}/{maxLength}
           </span>
         </div>
-        <Button className="submit-btn mt-8.5 sm:mt-6.5">Confirm</Button>
+        <Button onClick={handleMessage} className="submit-btn mt-8.5 sm:mt-6.5">
+          {isPending ? (
+            <RiLoader2Line className="size-5 animate-spin" />
+          ) : (
+            "Confirm"
+          )}
+        </Button>
       </DialogContent>
     </Dialog>
   );
