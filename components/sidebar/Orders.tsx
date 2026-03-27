@@ -38,7 +38,7 @@ const Orders = ({ setActiveTab, isAuthenticated }: OrdersProps) => {
 
   const filteredOrders =
     orders?.filter((order) => {
-      if (currentTab === "previous") return order.status === "COMPLETED";
+      if (currentTab === "previous") return order.status !== "COMPLETED";
 
       return order.status !== "COMPLETED";
     }) || [];
